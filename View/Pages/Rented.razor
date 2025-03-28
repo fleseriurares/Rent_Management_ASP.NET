@@ -1,0 +1,245 @@
+﻿@page "/rented"
+@using HouseRentApp.Presenter
+@using HouseRentApp.Presenter.dto
+@using K4os.Hash.xxHash
+@using Microsoft.AspNetCore.Components.Web
+
+@rendermode InteractiveServer
+
+@implements IRentsGUI_
+
+
+<PageTitle>Rented Houses</PageTitle>
+
+<h1>Rented</h1>
+
+<EditForm Model="this" OnValidSubmit="HandleEditSubmit" FormName="EditRentForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="type" class="form-label">Type of housing</label>
+        <InputSelect id="type" class="form-control" @bind-Value="housingType">
+            <option value="Studio">Studio</option>
+            <option value="Apartment">Apartment</option>
+            <option value="House">House</option>
+
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label for="address" class="form-label">Address</label>
+        <InputText id="address" class="form-control" @bind-Value="address"  />
+    </div>
+
+    <div class="mb-3">
+        <label for="price" class="form-label">Price</label>
+        <InputNumber id="price" class="form-control" @bind-Value="price" />
+    </div>
+
+    <div class="mb-3">
+        <label for="rooms" class="form-label">Number of rooms</label>
+        <InputNumber id="rooms" class="form-control" @bind-Value="rooms" />
+    </div>
+
+    <div class="mb-3">
+        <label for="imageUrl" class="form-label">Image Url</label>
+        <InputText id="imageUrl" class="form-control" @bind-Value="imageUrl" />
+    </div>
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Client Name</label>
+        <InputText id="name" class="form-control" @bind-Value="name" />
+    </div>
+
+    <div class="mb-3">
+        <label for="cnp" class="form-label">Client Cnp</label>
+        <InputText id="cnp" class="form-control" @bind-Value="cnp" />
+    </div>
+    
+    <button type="submit" class="btn btn-primary" >Submit</button>
+</EditForm>
+
+
+<div style="margin-top: 40px;">
+    <h2>Rented Houses</h2>
+
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Picture</th>
+                <th>Type</th>
+                <th>Address</th>
+                <th>Price ($)</th>
+                <th>Number of Rooms</th>
+                <th>Client Name</th>
+                <th>Client Cnp</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            
+            @foreach (var rcDto in presenter.RentContractsDto)
+            {
+                <tr>
+                    <td>
+                        <img src="@rcDto.ImageUrl" alt="House Image" width="200" height="200" style="object-fit:cover; border-radius: 5px;"/>
+                    </td>
+                    <td style="vertical-align: middle;">@rcDto.HousingType</td>
+                    <td style="vertical-align: middle;">@rcDto.Address</td>
+                    <td style="vertical-align: middle;">@rcDto.Price</td>
+                    <td style="vertical-align: middle;">@rcDto.NoOfRooms</td>
+                    <td style="vertical-align: middle;">@rcDto.ClientName</td>
+                    <td style="vertical-align: middle;">@rcDto.ClientCnp</td>
+                    <td style="vertical-align: middle;">@rcDto.StartDate</td>
+                    <td style="vertical-align: middle;">@rcDto.EndDate</td>
+                    <button class="btn btn-danger btn-sm" @onclick="() => HandleDelete(rcDto.Id)">Delete</button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => HandleEdit(rcDto.Id)">Edit</button>
+
+                </tr>
+            }
+            
+            </tbody>
+        </table>
+    
+</div>
+
+@code {
+    
+    private string message;
+    private RentsPresenter presenter;
+    private string housingType;
+    private int currentId;
+    private int minPrice = 0;
+    private int maxPrice = 2000;
+    private int selectedNoOfRooms = 0;
+    private string selectedAddress = "";
+    private string selectedHousingType = "All types";
+    private string address = "";
+    private int price;
+    private int rooms;
+    private string name;
+    private string cnp;
+    private string imageUrl;
+    private bool editMode;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        presenter = new RentsPresenter(this);
+        await presenter.GetAllRentsAsync();
+      //  await presenter.GetAllRentsAsync2();
+        
+        await LoadHouses();
+    }
+    
+    private async Task LoadHouses()
+    {
+        await presenter.GetAllClientsAsync();
+        await presenter.GetAllHousesAsync();
+    }
+
+    private async Task HandleEdit(int id)
+    {
+        presenter.EditInPending(id);
+    }
+
+    private async Task HandleEditSubmit()
+    {
+        await presenter.UpdateContract();
+        await LoadHouses();
+    }
+    
+    public async Task HandleDelete(int id)
+    {
+        await presenter.DeleteContractAsync(id);
+        await LoadHouses();
+        StateHasChanged();
+    }
+    
+    public int GetPrice()
+    {
+        return price;
+    }
+
+    public int GetNoOfRooms()
+    {
+        return rooms;
+    }
+
+    public string GetHousingType()
+    {
+        return housingType;
+    }
+
+    public string GetAddress()
+    {
+        return address;
+    }
+
+    public string GetImgURL()
+    {
+        return imageUrl;
+    }
+
+    public string GetClientName()
+    {
+        return name;
+    }
+
+    public string GetClientCnp()
+    {
+        return cnp;
+    }
+
+    public int GetId()
+    {
+        return currentId;
+    }
+    
+   public void SetEditMode(bool editMode)
+   {
+       this.editMode = editMode;
+   }
+   
+   public void SetAddress(string address)
+   {
+       this.address = address;
+   }
+
+   public void SetRooms(int rooms)
+   {
+       this.rooms = rooms;
+   }
+
+   public void SetPrice(int price)
+   {
+       this.price = price;
+   }
+    
+   public void SetHousingType(string type)
+   {
+       this.housingType = type;
+   }
+
+   public void SetImgURL(string imgURL)
+   {
+       this.imageUrl = imgURL;
+   }
+
+   public void SetCurrentId(int id)
+   {
+       this.currentId = id;
+   }
+
+   public void SetClientName(string name1)
+   {
+       this.name = name1;
+   }
+
+   public void SetClientCnp(string cnp1)
+   {
+       this.cnp = cnp1;
+   }
+   
+}

@@ -1,0 +1,395 @@
+﻿@page "/"
+@using System.Diagnostics.CodeAnalysis
+@using BlazorApp1
+@using HouseRentApp
+
+@using HouseRentApp.Presenter
+@rendermode InteractiveServer
+
+@implements IHousesManagementGUI
+
+<PageTitle>Home</PageTitle>
+
+<h1>Houses to rent</h1>
+
+<EditForm Model="this" OnValidSubmit="HandleValidSubmit" FormName="AddHousingForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="type" class="form-label">Type of housing</label>
+        <InputSelect id="type" class="form-control" @bind-Value="housingType">
+            <option value="Studio">Studio</option>
+            <option value="Apartment">Apartment</option>
+            <option value="House">House</option>
+
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label for="address" class="form-label">Address</label>
+        <InputText id="address" class="form-control" @bind-Value="address"  />
+    </div>
+
+    <div class="mb-3">
+        <label for="price" class="form-label">Price</label>
+        <InputNumber id="price" class="form-control" @bind-Value="price" />
+    </div>
+    
+
+    <div class="mb-3">
+        <label for="rooms" class="form-label">Number of rooms</label>
+        <InputNumber id="rooms" class="form-control" @bind-Value="rooms" />
+    </div>
+
+    <div class="mb-3">
+        <label for="imageUrl" class="form-label">Image Url</label>
+        <InputText id="imageUrl" class="form-control" @bind-Value="imageUrl" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" >Submit</button>
+</EditForm>
+<div style="margin-top: 5px;">
+    <button class="btn @(editMode ? "btn-success" : "btn-secondary") mb-3" @onclick="() => SubmitEdit()">Edit House</button>
+</div>
+
+
+
+<div class="mb-3 d-flex" style="margin-top: 13px;">
+    <label for="minPrice" class="form-label col-md-3">Minimum Price</label>
+    <div class="flex-fill">
+        <InputNumber id="minPrice" class="form-control" @bind-Value="minPrice"/>
+    </div>
+</div>
+
+<div class="mb-3 d-flex" style="margin-top: 13px;">
+    <label for="maxPrice" class="form-label col-md-3">Maximum Price</label>
+    <div class="flex-fill">
+        <InputNumber id="maxPrice" class="form-control" @bind-Value="maxPrice"/>
+    </div>
+</div>
+
+<div class="mb-3 d-flex" style="margin-top: 13px;">
+    <label for="location" class="form-label col-md-3">Location</label>
+    <div class="flex-fill">
+        <InputText id="location" class="form-control" @bind-Value="selectedAddress"/>
+    </div>
+</div>
+
+<div class="mb-3 d-flex" style="margin-top: 13px;">
+    <label for="NumberOfRooms" class="form-label col-md-3">Number of Rooms</label>
+    <div class="flex-fill">
+        <InputNumber id="NumberOfRooms" class="form-control" @bind-Value="selectedNoOfRooms"/>
+    </div>
+</div>
+
+<div class="mb-3 d-flex">
+    <label for="housingTypeFilter" class="form-label col-md-3">Select Housing Type</label>
+    <InputSelect id="housingTypeFilter" class="form-control" @bind-Value="selectedHousingType">
+        <option value ="All types">All types</option>
+        <option value="Studio">Studio</option>
+        <option value="Apartment">Apartment</option>
+        <option value="House">House</option>
+    </InputSelect>
+</div>
+
+<div class="d-flex justify-content-between mb-3" style="margin-top: 1px;">
+    <button class="btn btn-primary" @onclick="ApplyFilters">Apply Filter</button>
+    <button class="btn btn-primary" @onclick="ResetFilters">Reset Filter</button>
+</div>
+
+
+
+@if (message != null)
+{
+    <div class="alert alert-success mt-3">
+        @message
+    </div>
+}
+<div style="margin-top: 40px;">
+    <h2>Available Houses</h2>
+
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Picture</th>
+                <th>Type</th>
+                <th>Address</th>
+                <th>Price ($)</th>
+                <th>Number of Rooms</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var houseDto in presenter.AvailableHouses)
+            {
+                <tr>
+                    <td>
+                        <img src="@houseDto.ImageUrl" alt="House Image" width="200" height="200" style="object-fit:cover; border-radius: 5px;"/>
+                    </td>
+                    <td style="vertical-align: middle;">@houseDto.Type</td>
+                    <td style="vertical-align: middle;">@houseDto.Address</td>
+                    <td style="vertical-align: middle;">@houseDto.Price</td>
+                    <td style="vertical-align: middle;">@houseDto.RoomNumber</td>
+                    <td style="vertical-align: middle;">
+                        <button class="btn btn-danger btn-sm" @onclick="() => HandleDelete(houseDto.Id)">Delete</button>
+                        <button class="btn btn-warning btn-sm" @onclick="() => HandleEdit(houseDto.Id)">Edit</button>
+                        <button class="btn btn-success btn-sm" @onclick="() => HandleRent(houseDto.Id)">Rent</button>
+                        <div class="mb-3 d-flex" style="margin-top: 13px;">
+                            <label for="ClientName" class="form-label col-md-3">Client Name</label>
+                            <div class="flex-fill">
+                                <InputText id="ClientName" class="form-control" @bind-Value="clientName"/>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-flex" style="margin-top: 13px;">
+                            <label for="ClientCNP" class="form-label col-md-3">Client CNP</label>
+                            <div class="flex-fill">
+                                <InputText id="ClientCNP" class="form-control" @bind-Value="clientCNP"/>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-flex" style="margin-top: 13px;">
+                            <label for="StartDate" class="form-label col-md-3">Start Date</label>
+                            <div class="flex-fill">
+                                <InputDate id="StartDate" class="form-control" @bind-Value="startDate"/>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-flex" style="margin-top: 13px;">
+                            <label for="EndDate" class="form-label col-md-3">End Date</label>
+                            <div class="flex-fill">
+                                <InputDate id="EndDate" class="form-control" @bind-Value="endDate"/>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    
+</div>
+@code {
+
+    private string message;
+    private HousingPresenter presenter;
+    private string housingType = "Studio";
+    private int currentId;
+    private int minPrice = 0;
+    private int maxPrice = 2000;
+    private int selectedNoOfRooms = 0;
+    private string selectedAddress = "";
+    private string selectedHousingType = "All types";
+    private string address = "";
+    private int price ;
+    private int rooms;
+    private string imageUrl;
+    
+    private string clientName;
+    private string clientCNP;
+    private Boolean rented = false;
+    private bool editMode;
+    private DateTime startDate = DateTime.Today;
+    private DateTime endDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        presenter = new HousingPresenter(this);
+        await LoadHouses();
+    }
+
+    public void ShowHouses()
+    {
+        StateHasChanged();
+    }
+
+    private async Task LoadHouses()
+    {
+        await presenter.GetAllHousesAsync();
+        await presenter.GetAvailableHousingAsync();
+        presenter.SortByLocation();
+        presenter.SortByPrice();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+      
+        await presenter.AddHousingAsync();
+        await LoadHouses();
+    }
+   
+
+   
+
+    private async Task SubmitEdit()
+    {
+        await presenter.UpdateHousing();
+        await LoadHouses();
+    }
+
+    private async Task HandleRent(int id)
+    {
+        presenter.EditInPending(id);
+        await presenter.AddRentContractAsync(id);
+        await LoadHouses();
+
+    }
+    private async Task HandleDelete(int id)
+    {
+        await presenter.DeleteHousingAsync(id);
+        await LoadHouses();
+    }
+    
+    private async Task HandleEdit(int id)
+    {
+        presenter.EditInPending(id);
+    }
+    
+    private async Task ApplyFilters()
+    {
+        presenter.ApplyFilters();
+        presenter.SortByLocation();
+        presenter.SortByPrice();
+    }
+
+    public void SetImgURL(string str)
+    {
+        this.imageUrl = str;
+    }
+
+    public void SetPrice(int price)
+    {
+        this.price = price;
+    }
+    
+    public void SetHousingType(string type)
+    {
+        this.housingType = type;
+    }
+    
+    private async Task ResetFilters()
+    {
+        presenter.ResetFilters();
+    }
+
+    public void SetEditMode(bool editMode)
+    {
+        this.editMode = editMode;
+    }
+    
+    public void SetMinPrice(int minPrice)
+    {
+        this.minPrice = minPrice;
+    }
+
+    public void SetMaxPrice(int maxPrice)
+    {
+        this.maxPrice = maxPrice;
+    }
+
+    public void SetSelectedAddress(string address)
+    {
+        this.selectedAddress = address;
+    }
+    
+    public void SetAddress(string address)
+    {
+        this.address = address;
+    }
+
+    public void SetRooms(int rooms)
+    {
+        this.rooms = rooms;
+    }
+
+    public void SetSelectedType(string str)
+    {
+        this.selectedHousingType = str;
+    }
+
+    public void SetCurrentId(int id)
+    {
+        this.currentId = id;
+    }
+    
+    public int GetMinPrice()
+    {
+        return minPrice;
+    }
+    public int GetMaxPrice()
+    {
+        return maxPrice;
+    }
+
+    public string GetSelectedAddress()
+    {
+        return selectedAddress;
+    }
+
+    public int GetSelectedNoOfRooms()
+    {
+        return selectedNoOfRooms;
+    }
+    public string GetSelectedType()
+    {
+        return selectedHousingType;
+    }
+
+    public string GetClientName()
+    {
+        return clientName;
+    }
+
+    public string GetClientCNP()
+    {
+        return clientCNP;
+    }
+
+    public DateTime GetStartDate()
+    {
+        return startDate;
+    }
+
+    public DateTime GetEndDate()
+    {
+        return endDate;
+    }
+
+    public int GetHousingId()
+    {
+        return currentId;
+    }
+
+    public int GetPrice()
+    {
+        return price;
+    }
+
+    public int GetNoOfRooms()
+    {
+        return rooms;
+    }
+
+    public string GetHousingType()
+    {
+        return housingType;
+    }
+
+    public string GetAddress()
+    {
+        return address;
+    }
+
+    public string GetImgURL()
+    {
+        return imageUrl;
+    }
+
+    public bool GetIsRented()
+    {
+        return rented;
+    }
+
+    public int GetCurrentId()
+    {
+        return currentId;
+    }
+}
