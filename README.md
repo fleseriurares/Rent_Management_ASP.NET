@@ -2,7 +2,7 @@
 
 ## Description
 
-Rent Management ASP.NET is an application designed using the Model-View-Presenter (MVP) architecture. This application is built to handle the management of rental properties efficiently. It provides a robust and scalable solution for landlords and property managers to manage their rental properties, tenants, leases, and maintenance requests.
+Rent Management is an  ASP.NET application designed using the Model-View-Presenter (MVP) architecture. This application is built to handle the management of rental properties efficiently. It provides a robust and scalable solution for landlords and property managers to manage their rental properties, tenants, leases, and maintenance requests.
 
 ## Features
 
